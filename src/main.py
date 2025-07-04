@@ -1,31 +1,54 @@
-import random
-import time
+import random, time, threading
+
+TOTAL_DISTANCE = 50
+barreira = threading.Barrier(2)
 
 
-def set_new_car_position(position):
-    position += random.randint(1, 10)
-    return position
+class Car(threading.Thread):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+        self.position = 0
+        self.finished = False
+
+    def run(self):
+        print(f"[{self.model}] pronto para largar.")
+        barreira.wait()  # Espera todos os carros estarem prontos
+        print(f"[{self.model}] começou a corrida!")
+
+        while True:
+            step = random.randint(1, 10)
+            self.position += step
+            print(f"[{self.model}] avançou {step} → posição: {self.position}")
+            time.sleep(1)
+
+            if self.position >= TOTAL_DISTANCE:
+                self.finished = True
+                break
 
 
 def main():
     print("Hello from racing!")
 
-    total_distance = 50
-    car1 = 0
-    car2 = 0
+    fusca = Car("Fusca")
+    ferrari = Car("Ferrari")
+
+    fusca.start()
+    ferrari.start()
 
     while True:
-        car1 = set_new_car_position(car1)
-        car2 = set_new_car_position(car2)
-        print(f"Car 1: {car1}, Car 2: {car2}")
-        time.sleep(2)
+        if fusca.finished:
+            print("\n🚗 Fusca venceu a corrida!")
+            break
+        elif ferrari.position >= TOTAL_DISTANCE:
+            print("\n🏎️ Ferrari venceu a corrida!")
+            break
+        time.sleep(0.5)
 
-        if car1 >= total_distance:
-            print("Car 1 wins!")
-            break
-        elif car2 >= total_distance:
-            print("Car 2 wins!")
-            break
+
+    fusca.join()
+    ferrari.join()
+    print("\n🏁 Corrida finalizada.")
 
 
 if __name__ == "__main__":
